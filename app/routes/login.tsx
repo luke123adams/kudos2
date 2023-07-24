@@ -3,9 +3,13 @@ import { FormField } from "./components/form-field";
 import { useState } from "react"
 
 export default function Login() {
+
+    const [action, setAction] = useState('login');
     const [formData, setFormData] = useState({
             email: '',
-            password: ''
+            password: '',
+            firstName: '',
+            lastName: ''
         })
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -18,8 +22,14 @@ export default function Login() {
     return (
 <Layout>
 <div className="h-full flex justify-center items-center flex-col gap-y-4">
+    <button
+    onClick={()=>setAction( action == 'login' ? 'register' : 'login')}
+    className="absolute top-8 right-8 rounded-xl bg-yellow-300 font-semibold text-blue-600 px-3 py-2 transition duration-300 ease-in-out hover:bg-yellow-400 hover: translate-y-1"
+    >{action === 'login' ? 'Sign Up' : 'Sign In'} '</button>
     <h2 className="text-5xl font-extrabold text-yellow-300">Welcome to kudos</h2>
-    <p className="font-semibold text-slate-300">Log in bruh</p>
+    <p className="font-semibold text-slate-300">{
+        action === 'login' ? 'Log in' : 'Sign up'
+    }</p>
 
     {
         JSON.stringify(formData)    }
@@ -38,11 +48,29 @@ export default function Login() {
     value={formData.password}
     onChange={e=>handleInputChange(e, 'password')}
     />
+
+    {
+        action !== 'login' ? (<>
+        <FormField
+    htmlFor="firstname"
+    label="First Name"
+    value={formData.firstName}
+    onChange={e=>handleInputChange(e, 'firstName')}
+    />
+    <FormField
+    htmlFor="lastname"
+    label="Last Name"
+    value={formData.lastName}
+    onChange={e=>handleInputChange(e, 'lastName')}
+    /></>
+            
+        ) : null
+    }
     <div className="w-full text-center">
         <input
         type="submit"
         className="rounded-xl mt-2 bg-yellow-300 px-3 py-2 text-blue-600font-semibold transition duration-300 ease-in-out hover:bg-yellow-400 hover:-translate-y-1"
-        value="Sign In"/>
+        value={action === 'login' ? "Log in" : "Sign In"}/>
     </div>
     </form>
 </div>
