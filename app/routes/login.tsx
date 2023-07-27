@@ -1,6 +1,60 @@
 import { Layout } from "./components/layout";
 import { FormField } from "./components/form-field";
 import { useState } from "react"
+import { ActionFunction, json } from "@remix-run/node";
+import { validateEmail, validateName, validatePassword } from "~/utils/validators.server";
+import { login, register } from "~/utils/auth.server";
+
+export const action: ActionFunction = async ({ request }) => {
+    const form = await request.formData()
+    const action = form.get("_action");
+    const email = form.get("email");
+    const password = form.get("password");
+    let firstName = form.get("firstName");
+    let lastName = form.get("lastName");
+
+    if (
+        typeof action !== "string" ||
+        typeof email !== "string" ||
+        typeof password !== "string"
+    ) {
+        return json({error: 'Invalid Form Data', form: action }, {status: 400 });
+    }
+
+    if (
+        action === 'register' && (
+            typeof firstName !== "string" ||
+            typeof lastName !== "string"
+        )
+    ) {
+        return json({error: 'Invalid Form Data', form: action }, {status: 400 });
+    }
+
+    const errors = {
+        email: validateEmail(email),
+        password: validatePassword(password),
+        ...(action === 'register' ? {
+            firstName: validateName(firstName as string || ''),
+            lastName: validateName(lastName as string || ''),
+        } : {})
+    }
+
+    if (Object.values(errors).some(Boolean))
+    return json({ errors, fields: { email, password, firstName, lastName }, form: action }, { status: 400})
+
+    switch (action) {
+    case 'login': {
+        return await login({ email, password })
+    }
+    case 'register': {
+        firstName = firstName as string;
+        lastName = lastName as string;
+        return await register({ email, password, firstName, lastName})
+    }
+    default:
+                return json({ error: 'Invalid form data' }, { status: 400 });    
+    }
+}
 
 export default function Login() {
 
@@ -9,7 +63,7 @@ export default function Login() {
             email: '',
             password: '',
             firstName: '',
-            lastName: ''
+            lastName: '',
         })
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -34,7 +88,7 @@ export default function Login() {
     {
         JSON.stringify(formData)    }
 
-    <form>
+    <form method="POST" className="rounded-2xl bg-gray-200 p-6 w-96">
     <FormField
     htmlFor="email"
     label="Email"
@@ -55,13 +109,13 @@ export default function Login() {
     htmlFor="firstname"
     label="First Name"
     value={formData.firstName}
-    onChange={e=>handleInputChange(e, 'firstName')}
+    onChange={e=> handleInputChange(e, 'firstName')}
     />
     <FormField
     htmlFor="lastname"
     label="Last Name"
     value={formData.lastName}
-    onChange={e=>handleInputChange(e, 'lastName')}
+    onChange={e=> handleInputChange(e, 'lastName')}
     /></>
             
         ) : null

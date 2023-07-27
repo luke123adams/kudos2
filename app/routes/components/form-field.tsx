@@ -25,10 +25,7 @@ export function FormField({
 
     return <>
     <label htmlFor={htmlFor} className="text-blue-600 font-semibold">{label}</label>
-    <input onChange={e => {
-        onChange(e)
-        setErrorText('')
-    }} type={type} id={htmlFor} className="w-fu;; p-2 rounded-xl my-2" value={value}/>
+    <input onChange={onChange} type={type} id={htmlFor} className="w-fu;; p-2 rounded-xl my-2" value={value}/>
     <div className="text-xs font-semibold text-center tracking-wide text-red-500 w-full">
         {errorText || ''}
     </div>
