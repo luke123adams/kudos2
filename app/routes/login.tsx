@@ -1,9 +1,10 @@
 import { Layout } from "./components/layout";
 import { FormField } from "./components/form-field";
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ActionFunction, json } from "@remix-run/node";
 import { validateEmail, validateName, validatePassword } from "~/utils/validators.server";
 import { login, register } from "~/utils/auth.server";
+import { useActionData } from "@remix-run/react";
 
 export const action: ActionFunction = async ({ request }) => {
     const form = await request.formData()
@@ -57,13 +58,16 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Login() {
-
+    const actionData = useActionData()
+    const [formError, setFormError] = useState(actionData?.error || '')
+    const [errors, setErrors] = useState(actionData?.errors || {})
+    const firstLoad = useRef(true)
     const [action, setAction] = useState('login');
     const [formData, setFormData] = useState({
-            email: '',
-            password: '',
-            firstName: '',
-            lastName: '',
+            email: actionData?.fields?.email || '',
+            password: actionData?.fields?.password || '',
+            firstName: actionData?.fields?.firstName || '',
+            lastName: actionData?.fields?.lastName || '',
         })
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -72,7 +76,36 @@ export default function Login() {
             [field]: event.target.value
         }))
 
-    } 
+    }
+
+    useEffect(()=>{
+        // Clear the form if we switch forms
+
+    if (!firstLoad.current) {
+        const newState = {
+            email: '',
+            password: '',
+            firstName: '',
+            lastName: ''
+        }
+        setErrors(newState)
+        setFormError('')
+        setFormData(newState)
+    }
+    }, [action])
+
+    useEffect(() => {
+        if (!firstLoad.current) {
+        setFormError('')
+        }
+    }, [formData])
+
+    useEffect(() => {
+        //dont want to reset errors on page load because we want to see them
+        firstLoad.current = false
+    }, [])
+
+
     return (
 <Layout>
 <div className="h-full flex justify-center items-center flex-col gap-y-4">
@@ -89,18 +122,25 @@ export default function Login() {
         JSON.stringify(formData)    }
 
     <form method="POST" className="rounded-2xl bg-gray-200 p-6 w-96">
+        <div className="text-xs font-semibold text-center tracking-wide text-red-500 w-full">
+            {formError}
+        </div>
     <FormField
     htmlFor="email"
     label="Email"
+    name="email"
     value={formData.email}
     onChange={e=>handleInputChange(e, 'email')}
+    error={errors?.email}
     />
     <FormField
     htmlFor="password"
     label="Password"
     type="password"
+    name='password'
     value={formData.password}
     onChange={e=>handleInputChange(e, 'password')}
+    error={errors?.password}
     />
 
     {
@@ -108,14 +148,18 @@ export default function Login() {
         <FormField
     htmlFor="firstname"
     label="First Name"
+    name="firstName"
     value={formData.firstName}
     onChange={e=> handleInputChange(e, 'firstName')}
+    error={errors?.firstName}
     />
     <FormField
     htmlFor="lastname"
     label="Last Name"
     value={formData.lastName}
+    name="lastName"
     onChange={e=> handleInputChange(e, 'lastName')}
+    error={errors?.lastName}
     /></>
             
         ) : null
