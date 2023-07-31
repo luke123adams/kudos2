@@ -59,9 +59,9 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function Login() {
     const actionData = useActionData()
-    const [formError, setFormError] = useState(actionData?.error || '')
-    const [errors, setErrors] = useState(actionData?.errors || {})
     const firstLoad = useRef(true)
+    const [errors, setErrors] = useState(actionData?.errors || {})
+    const [formError, setFormError] = useState(actionData?.error || '')
     const [action, setAction] = useState('login');
     const [formData, setFormData] = useState({
             email: actionData?.fields?.email || '',
@@ -77,6 +77,11 @@ export default function Login() {
         }))
 
     }
+
+    useEffect(() => {
+        //dont want to reset errors on page load because we want to see them
+        firstLoad.current = false
+    }, [])
 
     useEffect(()=>{
         // Clear the form if we switch forms
@@ -99,11 +104,6 @@ export default function Login() {
         setFormError('')
         }
     }, [formData])
-
-    useEffect(() => {
-        //dont want to reset errors on page load because we want to see them
-        firstLoad.current = false
-    }, [])
 
 
     return (
